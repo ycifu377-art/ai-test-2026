@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 // 關鍵修改：將客戶端指向 DeepSeek 的服務器
 const openai = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY, 
-  baseURL: 'https://api.deepseek.com', // 必須加上這一行，否則它會去敲 OpenAI 的門
+  baseURL: 'https://api.deepseek.com',  
 });
 
 export const runtime = 'edge';
@@ -36,3 +36,4 @@ export async function POST(req: Request) {
   const stream = OpenAIStream(response);
   return new StreamingTextResponse(stream);
 }
+
