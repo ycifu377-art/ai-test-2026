@@ -53,7 +53,7 @@ export default function SocialTest() {
           disabled={loading}
           className="w-full bg-purple-600 hover:bg-purple-700 py-3 rounded-xl font-bold transition-all"
         >
-          {loading ? '正在分析Ꙭ̰ʹ̣ʹ̣...' : '开始鉴定'}
+          {loading ? '正在分析...' : '开始鉴定'}
         </button>
       </div>
 
@@ -66,7 +66,7 @@ export default function SocialTest() {
               <p className="text-gray-300 leading-relaxed italic">"{result.text}"</p>
             </div>
             <div className="mt-6 pt-6 border-t border-gray-700 text-[10px] text-gray-500 text-center">
-              此报告由 AI 鉴定 ·让你看看本机器人对你的分析ᗜ◞ᗜ ( ᓀ◞ᓂ..) (๑•̀ㅂ•́)و✧ 略略略~
+              此报告由 AI 鉴定 ·让你看看本机器人对你的分析 略略略~
             </div>
           </div>
           <button onClick={saveImage} className="mt-6 text-sm text-gray-400 underline">保存鉴定报告</button>
