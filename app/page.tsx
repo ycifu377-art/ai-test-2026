@@ -30,7 +30,7 @@ export default function SocialTest() {
     if (cardRef.current) {
       const dataUrl = await toPng(cardRef.current);
       const link = document.createElement('a');
-      link.download = '2026社恐报告.png';
+      link.download = '毒舌人格测试.png';
       link.href = dataUrl;
       link.click();
     }
@@ -38,12 +38,12 @@ export default function SocialTest() {
 
   return (
     <main className="min-h-screen bg-black text-white p-8 flex flex-col items-center">
-      <h1 className="text-4xl font-bold mb-8 text-purple-500">2026 社恐程度鉴定</h1>
+      <h1 className="text-4xl font-bold mb-8 text-purple-500">毒舌人格测试</h1>
       
       <div className="w-full max-w-md space-y-4">
         <textarea 
           className="w-full bg-gray-900 border border-gray-700 p-4 rounded-xl focus:outline-none focus:border-purple-500"
-          placeholder="输入一句话证明你有多社恐... (例：在路上看到熟人我会立刻低头假装玩手机)"
+          placeholder="把你的事情写在这里，让本机器来分析
           rows={4}
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -53,7 +53,7 @@ export default function SocialTest() {
           disabled={loading}
           className="w-full bg-purple-600 hover:bg-purple-700 py-3 rounded-xl font-bold transition-all"
         >
-          {loading ? '正在扫描灵魂...' : '开始鉴定'}
+          {loading ? '正在分析Ꙭ̰ʹ̣ʹ̣...' : '开始鉴定'}
         </button>
       </div>
 
@@ -61,12 +61,12 @@ export default function SocialTest() {
         <div className="mt-12 flex flex-col items-center">
           <div ref={cardRef} className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-3xl border-2 border-purple-500 w-80 shadow-2xl">
             <div className="text-center">
-              <p className="text-sm text-purple-300 mb-2">2026年社恐指数</p>
+              <p className="text-sm text-purple-300 mb-2">毒舌人格测试</p>
               <div className="text-6xl font-black text-white mb-4">{result.score}%</div>
               <p className="text-gray-300 leading-relaxed italic">"{result.text}"</p>
             </div>
             <div className="mt-6 pt-6 border-t border-gray-700 text-[10px] text-gray-500 text-center">
-              此报告由 AI 鉴定 · 拒绝社交 拯救生命
+              此报告由 AI 鉴定 ·让你看看本机器人对你的分析ᗜ◞ᗜ ( ᓀ◞ᓂ..) (๑•̀ㅂ•́)و✧ 略略略~
             </div>
           </div>
           <button onClick={saveImage} className="mt-6 text-sm text-gray-400 underline">保存鉴定报告</button>
