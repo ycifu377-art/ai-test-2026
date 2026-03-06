@@ -42,11 +42,12 @@ export async function POST(req: Request) {
       temperature: 0.8,
     })
 
-    // 使用 OpenAIStream 包装响应流，并返回 StreamingTextResponse 以支持流式输出
-    const stream = OpenAIStream(response)
-    return new StreamingTextResponse(stream)
+   // 使用 OpenAIStream 包装响应流，并返回 StreamingTextResponse 以支持流式输出
+    const stream = OpenAIStream(response as any);
+    return new StreamingTextResponse(stream);
   } catch (err) {
     console.error('[/api/chat] error:', err)
     return new Response('Internal Server Error', { status: 500 })
   }
 }
+
