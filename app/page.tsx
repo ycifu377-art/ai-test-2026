@@ -43,7 +43,7 @@ export default function SocialTest() {
       <div className="w-full max-w-md space-y-4">
         <textarea 
           className="w-full bg-gray-900 border border-gray-700 p-4 rounded-xl focus:outline-none focus:border-purple-500"
-          placeholder="把你的事情写在这里，让本机器来分析
+          placeholder="把你的事情写在这里，让本机器来分析'
           rows={4}
           value={input}
           onChange={(e) => setInput(e.target.value)}
