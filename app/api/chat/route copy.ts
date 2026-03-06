@@ -1,49 +1,39 @@
-import { NextResponse } from 'next/server';
+import { OpenAIStream, StreamingTextResponse } from 'ai';
+import OpenAI from 'openai';
+
+// 初始化 DeepSeek 客户端（核心：必须有 baseURL）
+const openai = new OpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY, 
+  baseURL: 'https://api.deepseek.com', 
+});
+
+export const runtime = 'edge';
 
 export async function POST(req: Request) {
-  try {
-    // 1. 提取前端发来的完整数据
-    const body = await req.json();
-    console.log("📥 收到前端发来的原始数据:", body);
+  const { messages } = await req.json();
 
-    // 2. 兼容各种常见的变量名，把用户输入的内容揪出来
-    const userMessage = body.message || body.prompt || body.content || "用户啥也没说";
+  // 人格测试专属系统提示词
+  const systemPrompt = {
+    role: "system",
+    content: `你是一个毒舌且眼尖的“人格测试分析师”。你的任务是根据用户的输入，从以下三个维度进行打分：
+    1. 【社恐程度】
+    2. 【社牛程度】
+    3. 【变态/奇葩度】
     
-    const apiKey = process.env.DEEPSEEK_API_KEY;
+    【回复格式要求】：
+    - 先用 1-2 句话犀利、幽默地吐槽用户的行为。
+    - 给出具体的百分比分数（如：社恐 10%，社牛 0%，变态 90%）。
+    - 最后给出一个“最终诊断标签”（如：【人类早期驯服四肢现场】或【变态界的一颗新星】）。
+    - 语气要毒舌、带点讽刺，绝对不要一本正经。`
+  };
 
-    if (!apiKey) {
-      console.log("❌ 秘钥读取状态: 未找到");
-      return NextResponse.json({ error: '请在 .env.local 中配置 DEEPSEEK_API_KEY' }, { status: 500 });
-    }
-    console.log("✅ 秘钥读取状态: 已找到");
+  const response = await openai.chat.completions.create({
+    model: 'deepseek-chat', // 指定 DeepSeek 模型
+    stream: true,
+    messages: [systemPrompt, ...messages],
+    temperature: 0.8, // 保持较高的随机性，让吐槽更多样
+  });
 
-    // 3. 向 DeepSeek 发起请求
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: '你是一个毒舌幽默的心理鉴定师，专门鉴定社恐。请根据用户描述的行为，给出一个搞笑的社恐等级和毒舌点评。' },
-          { role: 'user', content: userMessage }, // 确保这里绝对不会是空的
-        ],
-        temperature: 0.7,
-      }),
-    });
-
-    const data = await response.json();
-    console.log("👉 DeepSeek 返回结果:", JSON.stringify(data));
-
-    if (!response.ok) {
-      return NextResponse.json({ error: data.error?.message || 'API 报错了' }, { status: 500 });
-    }
-
-    return NextResponse.json(data.choices[0].message);
-  } catch (error) {
-    console.error("❌ 致命错误:", error);
-    return NextResponse.json({ error: '连接服务器失败' }, { status: 500 });
-  }
-  }
+  const stream = OpenAIStream(response);
+  return new StreamingTextResponse(stream);
+}
