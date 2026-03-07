@@ -4,12 +4,13 @@ import OpenAI from 'openai'
 
 export const runtime = 'edge'
 
-const openai = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY,
-  baseURL: 'https://api.deepseek.com', // 若不使用 DeepSeek 代理，可移除此行
-})
-
 export async function POST(req: Request) {
+  // 【关键修改】：把初始化移到函数内部，确保每次都能现抓环境变量！
+  const openai = new OpenAI({
+    apiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY,
+    baseURL: 'https://api.deepseek.com', 
+  })
+
   try {
     const body = await req.json()
     const messages = Array.isArray(body?.messages) ? body.messages : []
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
 
     // 调用 Chat Completions 创建流式响应
     const response = await openai.chat.completions.create({
-      model: 'deepseek-chat',  // DeepSeek 平台上的模型名称，根据实际情况调整
+      model: 'deepseek-chat',  
       messages: [systemPrompt, ...messages],
       stream: true,
       temperature: 0.8,
@@ -50,4 +51,3 @@ export async function POST(req: Request) {
     return new Response('Internal Server Error', { status: 500 })
   }
 }
-
