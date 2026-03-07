@@ -1,43 +1,43 @@
-import { OpenAIStream, StreamingTextResponse } from 'ai'
-import OpenAI from 'openai'
+import OpenAI from 'openai';
 
-export const runtime = 'edge'
+export const runtime = 'edge';
 
 export async function POST(req: Request) {
-  // 1. 每次请求都重新初始化
   const openai = new OpenAI({
-    apiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY,
-    baseURL: 'https://api.deepseek.com/v1', 
-  })
+    apiKey: process.env.DEEPSEEK_API_KEY,
+    baseURL: 'https://api.deepseek.com/v1',
+  });
 
   try {
-    const { messages } = await req.json()
+    const { messages } = await req.json();
 
-    // 2. 调用 DeepSeek
+    // 1. 发起请求 (注意 stream 改为 false)
     const response = await openai.chat.completions.create({
       model: 'deepseek-chat',
       messages: [
         {
           role: 'system',
-          content: '你是一個毒舌且眼尖的「人類行為分析師」。請分析用戶行為并給出犀利吐槽和評分。格式要求：吐槽文字 + 百分比分數 + 診斷標籤。語氣要幽默諷刺。'
+          content: '你是一個毒舌且眼尖的「人格測試分析師」。請根據輸入给出犀利吐槽。'
         },
         ...messages
       ],
-      stream: true,
+      stream: false, 
       temperature: 0.8,
-    })
+    });
 
-    // 3. 转换为兼容 Vercel AI SDK 的流 (使用 as any 绕过 TypeScript 类型审查)
-    const stream = OpenAIStream(response as any);
-    
-    // 4. 返回流式响应
-    return new StreamingTextResponse(stream);
+    // 2. 提取文本内容
+    const content = response.choices[0].message.content;
+
+    // 3. 返回标准的 JSON 对象，确保前端能用 .json() 解析成功
+    return new Response(JSON.stringify({ content }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
   } catch (err: any) {
-    console.error('DeepSeek API Error:', err.message || err);
+    console.error('API Error:', err.message);
     return new Response(JSON.stringify({ error: err.message }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
