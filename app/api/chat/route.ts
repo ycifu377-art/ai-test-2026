@@ -1,53 +1,45 @@
-// 示例：Next.js Edge API 路由，使用 DeepSeek 实现流式 ChatGPT 响应
 import { OpenAIStream, StreamingTextResponse } from 'ai'
 import OpenAI from 'openai'
 
 export const runtime = 'edge'
 
 export async function POST(req: Request) {
-  // 【关键修改】：把初始化移到函数内部，确保每次都能现抓环境变量！
+  // 1. 每次请求都重新初始化，确保环境变量刷新
   const openai = new OpenAI({
     apiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY,
-    baseURL: 'https://api.deepseek.com', 
+    // 【关键修改点】：加上 /v1，这是 DeepSeek 官方推荐的最稳妥路径
+    baseURL: 'https://api.deepseek.com/v1', 
   })
 
   try {
-    const body = await req.json()
-    const messages = Array.isArray(body?.messages) ? body.messages : []
+    const { messages } = await req.json()
 
-    // 基本校验：确保 messages 是非空数组
-    if (!Array.isArray(messages) || messages.length === 0) {
-      return new Response('Bad Request: messages must be a non-empty array', { status: 400 })
-    }
-
-    // 系统级提示，用于指示 AI 的行为和输出格式
-    const systemPrompt = {
-      role: 'system',
-      content: `你是一個毒舌且眼尖的「人類行為分析師」。請分析用戶行為並從以下維度打分：
-1. 【社恐程度】
-2. 【社牛程度】
-3. 【變態/奇葩度】
-
-【回復格式要求】：
-- 先用犀利的語言吐槽。
-- 給出百分比分數（例如：社恐 23%）。
-- 給出「最終診斷結果」標籤。
-語氣要幽默、毒舌、帶點諷刺。`,
-    }
-
-    // 调用 Chat Completions 创建流式响应
+    // 2. 调用 DeepSeek
     const response = await openai.chat.completions.create({
-      model: 'deepseek-chat',  
-      messages: [systemPrompt, ...messages],
+      model: 'deepseek-chat',
+      messages: [
+        {
+          role: 'system',
+          content: '你是一個毒舌且眼尖的「人類行為分析師」。請分析用戶行為并給出犀利吐槽和評分。格式要求：吐槽文字 + 百分比分數 + 診斷標籤。語氣要幽默諷刺。'
+        },
+        ...messages
+      ],
       stream: true,
       temperature: 0.8,
     })
 
-   // 使用 OpenAIStream 包装响应流，并返回 StreamingTextResponse 以支持流式输出
-    const stream = OpenAIStream(response as any);
+    // 3. 转换为兼容 Vercel AI SDK 的流
+    const stream = OpenAIStream(response);
+    
+    // 4. 返回流式响应
     return new StreamingTextResponse(stream);
-  } catch (err) {
-    console.error('[/api/chat] error:', err)
-    return new Response('Internal Server Error', { status: 500 })
+
+  } catch (err: any) {
+    // 如果出错了，至少在日志里打印出具体的报错内容
+    console.error('DeepSeek API Error:', err.message || err);
+    return new Response(JSON.stringify({ error: err.message }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
