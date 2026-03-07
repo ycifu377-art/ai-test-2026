@@ -4,10 +4,9 @@ import OpenAI from 'openai'
 export const runtime = 'edge'
 
 export async function POST(req: Request) {
-  // 1. 每次请求都重新初始化，确保环境变量刷新
+  // 1. 每次请求都重新初始化
   const openai = new OpenAI({
     apiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY,
-    // 【关键修改点】：加上 /v1，这是 DeepSeek 官方推荐的最稳妥路径
     baseURL: 'https://api.deepseek.com/v1', 
   })
 
@@ -28,14 +27,13 @@ export async function POST(req: Request) {
       temperature: 0.8,
     })
 
-    // 3. 转换为兼容 Vercel AI SDK 的流
-    const stream = OpenAIStream(response);
+    // 3. 转换为兼容 Vercel AI SDK 的流 (使用 as any 绕过 TypeScript 类型审查)
+    const stream = OpenAIStream(response as any);
     
     // 4. 返回流式响应
     return new StreamingTextResponse(stream);
 
   } catch (err: any) {
-    // 如果出错了，至少在日志里打印出具体的报错内容
     console.error('DeepSeek API Error:', err.message || err);
     return new Response(JSON.stringify({ error: err.message }), { 
       status: 500,
